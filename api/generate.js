@@ -36,7 +36,31 @@ function isAuthorised(req) {
   return keysMatch(header.slice('Bearer '.length), expected);
 }
 
+// Comma-separated list, e.g. "http://localhost:4200,https://admin.example.com"
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:4200')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  res.setHeader('Vary', 'Origin');
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    res.setHeader('Access-Control-Max-Age', '600');
+  }
+}
+
 export default async function handler(req, res) {
+  applyCors(req, res);
+
+  // Browser preflight, sent before a cross-origin POST with an Authorization header.
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Use POST' });
   }

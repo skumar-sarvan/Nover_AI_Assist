@@ -26,6 +26,7 @@ Open http://localhost:3000.
 3. Add environment variables (Production and Preview):
    - `ANTHROPIC_API_KEY`
    - `DEMO_API_KEY`
+   - `ALLOWED_ORIGINS` (for example `http://localhost:4200,https://<admin-domain>`; needed for calls from another site)
 4. Deploy. Then check `https://<your-project>.vercel.app/api/health`.
 
 ## Test the API
