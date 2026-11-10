@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/blog-page.js": {
+      "maxDuration": 60
+    }
+  }
+}
