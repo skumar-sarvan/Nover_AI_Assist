@@ -1,0 +1,13 @@
+{
+  "name": "nover-ai-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Internal demo: AI copy generation API for the Nover admin portal",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.7.0"
+  }
+}

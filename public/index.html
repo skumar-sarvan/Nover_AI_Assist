@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nover AI Demo</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1d2433;
+      --muted: #5d6679;
+      --border: #d7dce6;
+      --brand: #1f5eff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111521;
+        --card: #1a2030;
+        --text: #e8ecf5;
+        --muted: #9aa3b8;
+        --border: #2d3548;
+        --brand: #6a9bff;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    h1 { font-size: 1.5rem; margin: 0 0 4px; }
+    .sub { color: var(--muted); margin: 0 0 20px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; font-size: 0.9rem; }
+    label:first-child { margin-top: 0; }
+    input, select, textarea {
+      width: 100%;
+      font: inherit;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+    }
+    textarea { min-height: 140px; resize: vertical; }
+    button {
+      margin-top: 14px;
+      background: var(--brand);
+      color: #fff;
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 18px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin: 0;
+      font: inherit;
+      line-height: 1.5;
+    }
+    .meta { color: var(--muted); font-size: 0.85rem; margin-top: 10px; }
+    .error { color: #c62828; }
+    code { font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Nover AI copy demo</h1>
+    <p class="sub">Generates draft copy with Claude. Internal demo only. Review all output before use.</p>
+
+    <div class="card">
+      <label for="key">Demo API key</label>
+      <input id="key" type="password" autocomplete="off" placeholder="Enter the demo key" />
+
+      <label for="task">Task</label>
+      <select id="task">
+        <option value="seo">SEO meta title, description and keywords</option>
+        <option value="product-description">Product description</option>
+        <option value="blog-intro">Blog post headline and intro</option>
+      </select>
+
+      <label for="brief">Brief</label>
+      <textarea id="brief" maxlength="2000" placeholder="e.g. Heavy-duty steel shelving for warehouses. Boltless design, 300kg per shelf, powder-coated finish, made in Australia."></textarea>
+
+      <button id="go">Generate</button>
+    </div>
+
+    <div class="card" id="result" hidden>
+      <pre id="output"></pre>
+      <div class="meta" id="meta"></div>
+    </div>
+  </main>
+
+  <script>
+    const btn = document.getElementById('go');
+    const out = document.getElementById('output');
+    const meta = document.getElementById('meta');
+    const card = document.getElementById('result');
+
+    btn.addEventListener('click', async () => {
+      const key = document.getElementById('key').value.trim();
+      const task = document.getElementById('task').value;
+      const brief = document.getElementById('brief').value.trim();
+
+      card.hidden = false;
+      out.className = '';
+      meta.textContent = '';
+
+      if (!key || !brief) {
+        out.className = 'error';
+        out.textContent = 'Enter the demo key and a brief.';
+        return;
+      }
+
+      btn.disabled = true;
+      out.textContent = 'Generating...';
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${key}`,
+          },
+          body: JSON.stringify({ task, brief }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          out.className = 'error';
+          out.textContent = `Error ${res.status}: ${data.error || 'Request failed'}`;
+          return;
+        }
+
+        out.textContent = data.text;
+        meta.textContent = `Model: ${data.model} | Input tokens: ${data.usage.inputTokens} | Output tokens: ${data.usage.outputTokens}`;
+      } catch (err) {
+        out.className = 'error';
+        out.textContent = 'Network error. Check the deployment and try again.';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
