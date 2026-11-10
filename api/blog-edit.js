@@ -37,6 +37,7 @@ Rules:
 - edits: include ONLY the text blocks that need to change to follow the instruction. Leave out every block that stays as it is.
 - Use only ids you were given, each at most once. Never invent ids. Never add or remove blocks.
 - In each edit, return the full replacement text for that block. Keep the original tone, length and formatting. If the original contains HTML tags, line breaks or links, keep them unless the instruction says otherwise.
+- Do not add images, links or HTML tags that are not already in the block. You cannot supply images: the editor adds images as separate blocks. If the instruction asks for an image, leave the text as it is.
 - Where a heading is changed, keep it short and specific.
 - title: a new headline that reflects the changes, 60 characters or fewer, and different from the original title.
 - slug: lowercase words separated by hyphens, no punctuation, based on the new title.
@@ -132,8 +133,18 @@ function normaliseEdit(raw, source) {
       dropped += 1;
       continue;
     }
+    // Images are separate page-builder blocks. Never let one slip into a text block.
+    let clean = text;
+    if (/<img/i.test(clean) && !/<img/i.test(original.text)) {
+      clean = clean.replace(/<img[^>]*>/gi, '').trim();
+      warnings.push('AI cannot add images. An image tag was removed from the text.');
+      if (!clean || clean === original.text.trim()) {
+        dropped += 1;
+        continue;
+      }
+    }
     used.add(e.id);
-    edits.push({ id: e.id, text: original.kind === 'heading' ? clip(text, 200) : text });
+    edits.push({ id: e.id, text: original.kind === 'heading' ? clip(clean, 200) : clean });
   }
   if (dropped) warnings.push(`${dropped} unusable edit${dropped === 1 ? ' was' : 's were'} ignored.`);
   if (!edits.length) warnings.push('AI did not change any text. Be more specific about what to replace.');
