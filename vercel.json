@@ -2,6 +2,9 @@
   "functions": {
     "api/blog-page.js": {
       "maxDuration": 60
+    },
+    "api/blog-edit.js": {
+      "maxDuration": 60
     }
   }
 }

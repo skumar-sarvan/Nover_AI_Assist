@@ -53,6 +53,28 @@ Response:
 
 Errors: `400` bad input, `401` wrong or missing key, `405` not POST, `422` model declined, `500` server not configured, `502`/upstream status for AI errors.
 
+## Blog endpoints (Nover admin portal)
+
+- `POST /api/blog-page`: full blog post draft from a brief. Body: `{ "brief": "..." }`.
+- `POST /api/blog-edit`: rewrite parts of a copy of an existing post. Returns new SEO fields and replacement text for the headings and text blocks that need to change, keyed by block id. Both use `Authorization: Bearer <DEMO_API_KEY>`.
+
+`/api/blog-edit` request:
+
+```json
+{
+  "instruction": "Rewrite for Melbourne instead of Sydney and update pricing to start from $450.",
+  "source": {
+    "title": "...", "excerpt": "...",
+    "metaTitle": "...", "metaDescription": "...", "metaKeywords": "...",
+    "texts": [ { "id": "el12", "kind": "heading", "text": "..." } ]
+  }
+}
+```
+
+Response: `{ "page": { title, slug, excerpt, metaTitle, metaDescription, metaKeywords }, "edits": [ { "id", "text" } ], "warnings": [], "usage": { ... } }`.
+
+Limits: instruction 10 to 2,000 characters; at most 150 text blocks and 40,000 characters of text. Edits for unknown ids, repeated ids, empty text or unchanged text are dropped. Errors match `/api/blog-page` (`400`, `401`, `422`, `502`, upstream status). The admin portal side is described in `docs/ai-blog-edit.md` in Nover.Web.
+
 ## Limits and next steps (not for production yet)
 
 - **Demo key is a shared secret.** Anyone with it can spend credit. Rotate it after the demo.

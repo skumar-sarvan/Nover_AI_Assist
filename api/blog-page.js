@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod/v4';
-import { applyCors, isAuthorised, estimateCostUsd, PRICE_PER_MTOK } from '../lib/common.js';
+import { applyCors, isAuthorised, estimateCostUsd, PRICE_PER_MTOK, clip, slugify } from '../lib/common.js';
 
 const MODEL = PRICE_PER_MTOK.model;
 const MAX_BRIEF_CHARS = 2000;
@@ -42,28 +42,6 @@ Rules:
 
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-}
-
-/** Trim to a maximum length without cutting mid-word where possible. */
-function clip(text, max) {
-  const value = String(text ?? '').replace(/\s+/g, ' ').trim();
-  if (value.length <= max) return value;
-  const cut = value.slice(0, max);
-  const lastSpace = cut.lastIndexOf(' ');
-  return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trim();
-}
-
-function slugify(text) {
-  return String(text ?? '')
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 120);
 }
 
 /** Enforce the limits the CMS form uses, and drop empty sections. */
